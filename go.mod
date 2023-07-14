@@ -8,8 +8,10 @@ require (
 	github.com/go-gorp/gorp v2.2.0+incompatible
 	github.com/go-playground/validator/v10 v10.14.1
 	github.com/go-redis/redis/v7 v7.4.1
+	github.com/golang-jwt/jwt/v4 v4.5.0
 	github.com/google/uuid v1.3.0
 	github.com/joho/godotenv v1.5.1
+	golang.org/x/crypto v0.9.0
 )
 
 require (
@@ -35,7 +37,6 @@ require (
 	github.com/ugorji/go/codec v1.2.11 // indirect
 	github.com/ziutek/mymysql v1.5.4 // indirect
 	golang.org/x/arch v0.3.0 // indirect
-	golang.org/x/crypto v0.9.0 // indirect
 	golang.org/x/net v0.10.0 // indirect
 	golang.org/x/sys v0.8.0 // indirect
 	golang.org/x/text v0.9.0 // indirect

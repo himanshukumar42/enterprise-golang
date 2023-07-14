@@ -19,7 +19,7 @@ type DB struct {
 var db *gorp.DbMap
 
 func Init() {
-	dbInfo := fmt.Sprintf("user=%s password=%s dbname=%s sslmode=disable", os.Getenv("DB_USER"), os.Getenv("DB_PASS"), os.Getenv("DB_PASS"), os.Getenv("DB_NAME"))
+	dbInfo := fmt.Sprintf("user=%s password=%s dbname=%s sslmode=disable", os.Getenv("DB_USER"), os.Getenv("DB_PASS"), os.Getenv("DB_NAME"))
 
 	var err error
 	db, err = ConnectDB(dbInfo)

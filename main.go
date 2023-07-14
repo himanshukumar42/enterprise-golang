@@ -9,10 +9,10 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/gin-gonic/gin/binding"
 	uuid "github.com/google/uuid"
+	"github.com/himanshukumar42/enterprise/controllers"
 	"github.com/himanshukumar42/enterprise/db"
 	"github.com/himanshukumar42/enterprise/forms"
 	"github.com/joho/godotenv"
-	"storj.io/storj/multinode/console/controllers"
 )
 
 // CORSMiddleware ...
@@ -77,5 +77,6 @@ func main() {
 	{
 		/*** START USER **/
 		user := new(controllers.UserController)
+		v1.POST("/user/login", user.Login)
 	}
 }

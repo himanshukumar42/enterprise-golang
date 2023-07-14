@@ -3,7 +3,9 @@ package main
 import (
 	"fmt"
 	"log"
+	"net/http"
 	"os"
+	"runtime"
 
 	"github.com/gin-contrib/gzip"
 	"github.com/gin-gonic/gin"
@@ -77,6 +79,47 @@ func main() {
 	{
 		/*** START USER **/
 		user := new(controllers.UserController)
-		v1.POST("/user/login", user.Login)
+		v1.POST("/users/login", user.Login)
+		v1.POST("/users/register", user.Register)
+		v1.GET("/users/logout", user.Logout)
+
+		/** START AUTH **/
+		auth := new(controllers.AuthController)
+
+		// Refresh the token when needed to generate new access_token and refresh_token for the user
+		v1.POST("/token/refresh", auth.Refresh)
+
+		/** START Contacts ***/
+
+	}
+	r.LoadHTMLGlob("./public/html/*")
+	r.Static("/public", "./public")
+
+	r.GET("/", func(c *gin.Context) {
+		c.HTML(http.StatusOK, "index.html", gin.H{
+			"goVersion": runtime.Version(),
+		})
+	})
+
+	r.NoRoute(func(c *gin.Context) {
+		c.HTML(404, "404.html", gin.H{})
+	})
+
+	port := os.Getenv("PORT")
+	log.Printf("\n\n PORT: %s \n ENV: %s \n SSL: %s \n Version: %s \n\n", port, os.Getenv("ENV"), os.Getenv("SSL"), os.Getenv("API_VERSION"))
+
+	if os.Getenv("SSL") == "TRUE" {
+		// Generated using sh generate-certificate.sh
+		SSLKeys := &struct {
+			CERT string
+			KEY  string
+		}{
+			CERT: "./cert/myCA.cer",
+			KEY:  "./cert/myCA.key",
+		}
+
+		r.RunTLS(":"+port, SSLKeys.CERT, SSLKeys.KEY)
+	} else {
+		r.Run(":" + port)
 	}
 }

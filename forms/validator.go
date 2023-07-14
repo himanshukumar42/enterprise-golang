@@ -42,7 +42,7 @@ func (v *DefaultValidator) lazyinit() {
 		// add any custom validation etc. here
 
 		//Custom rule for user full name
-		v.validate.RegisterValidation("fullname", ValidateFullName)
+		v.validate.RegisterValidation("fullName", ValidateFullName)
 	})
 }
 

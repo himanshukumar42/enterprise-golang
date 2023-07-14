@@ -1,6 +1,8 @@
 package models
 
 import (
+	"errors"
+
 	"github.com/himanshukumar42/enterprise/db"
 	"github.com/himanshukumar42/enterprise/forms"
 	"golang.org/x/crypto/bcrypt"
@@ -11,8 +13,8 @@ type User struct {
 	Email     string `db:"email" json:"email"`
 	Password  string `db:"password" json:"-"`
 	Name      string `db:"name" json:"name"`
-	UpdatedAt int64  `db:"updatedAt" json:"-"`
-	CreatedAt int64  `db:"createdAt" json:"-"`
+	UpdatedAt int64  `db:"updated_at" json:"-"`
+	CreatedAt int64  `db:"created_at" json:"-"`
 }
 
 // UserModel..
@@ -46,5 +48,39 @@ func (m UserModel) Login(form forms.LoginForm) (user User, token Token, err erro
 		token.AccessToken = tokenDetails.AccessToken
 		token.RefreshToken = tokenDetails.RefreshToken
 	}
+
 	return user, token, nil
+}
+
+func (m UserModel) Register(form forms.RegisterForm) (user User, err error) {
+
+	// check if the user exists in the database
+	checkUser, err := db.GetDB().SelectInt("SELECT count(id) FROM public.user where email=LOWER($1) LIMIT 1", form.Email)
+	if err != nil {
+		return user, errors.New("something went wrong, please try again later")
+	}
+	if checkUser > 0 {
+		return user, errors.New("email already exists")
+	}
+
+	bytePassword := []byte(form.Password)
+	hashedPassword, err := bcrypt.GenerateFromPassword(bytePassword, bcrypt.DefaultCost)
+	if err != nil {
+		return user, errors.New("something went wrong, please try again later")
+	}
+
+	// create the user and returns back the user ID
+	err = db.GetDB().QueryRow("INSERT INTO public.user(email, password, name) VALUES($1, $2, $3) RETURNING id", form.Email, string(hashedPassword), form.Name).Scan(&user.ID)
+	if err != nil {
+		return user, errors.New("something went wrong, please try again later")
+	}
+	user.Name = form.Name
+	user.Email = form.Email
+
+	return user, err
+}
+
+func (m UserModel) One(userID int64) (user User, err error) {
+	err = db.GetDB().SelectOne(&user, "SELECT id, email, name FROM public.user where id=$1 LIMIT 1", userID)
+	return user, err
 }

@@ -1,15 +1,14 @@
 package db
 
 import (
-	"crypto/tls"
 	"database/sql"
 	"fmt"
 	"log"
 	"os"
-	"time"
 
 	"github.com/go-gorp/gorp"
 	_redis "github.com/go-redis/redis/v7"
+	_ "github.com/lib/pq"
 )
 
 type DB struct {
@@ -55,19 +54,19 @@ func InitRedis(selectDB ...int) {
 	var redisPassword = os.Getenv("REDIS_PASSWORD")
 
 	RedisClient = _redis.NewClient(&_redis.Options{
-		Addr:               redisHost,
-		Password:           redisPassword,
-		DB:                 selectDB[0],
-		DialTimeout:        10 * time.Second,
-		ReadTimeout:        30 * time.Second,
-		WriteTimeout:       30 * time.Second,
-		PoolSize:           10,
-		PoolTimeout:        30 * time.Second,
-		IdleTimeout:        500 * time.Millisecond,
-		IdleCheckFrequency: 500 * time.Millisecond,
-		TLSConfig: &tls.Config{
-			InsecureSkipVerify: true,
-		},
+		Addr:     redisHost,
+		Password: redisPassword,
+		DB:       selectDB[0],
+		// DialTimeout:        10 * time.Second,
+		// ReadTimeout:        30 * time.Second,
+		// WriteTimeout:       30 * time.Second,
+		// PoolSize:           10,
+		// PoolTimeout:        30 * time.Second,
+		// IdleTimeout:        500 * time.Millisecond,
+		// IdleCheckFrequency: 500 * time.Millisecond,
+		// TLSConfig: &tls.Config{
+		// 	InsecureSkipVerify: true,
+		// },
 	})
 }
 

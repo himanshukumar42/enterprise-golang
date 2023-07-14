@@ -59,7 +59,7 @@ func (m AuthModel) CreateToken(userID int64) (*TokenDetails, error) {
 
 	// Creating Refresh Token
 	rtClaims := jwt.MapClaims{}
-	rtClaims["refresh_uuid"] = td.RefreshToken
+	rtClaims["refresh_uuid"] = td.RefreshUUID
 	rtClaims["user_id"] = userID
 	rtClaims["expires"] = td.RtExpires
 	rt := jwt.NewWithClaims(jwt.SigningMethodHS256, rtClaims)
@@ -67,6 +67,7 @@ func (m AuthModel) CreateToken(userID int64) (*TokenDetails, error) {
 	if err != nil {
 		return nil, err
 	}
+
 	return td, err
 }
 
@@ -75,14 +76,14 @@ func (m AuthModel) CreateAuth(userID int64, td *TokenDetails) error {
 	rt := time.Unix(td.RtExpires, 0)
 	now := time.Now()
 
-	errAccess := db.GetRedis().Set(td.AccessUUID, strconv.Itoa(int(userID)), at.Sub(now))
+	errAccess := db.GetRedis().Set(td.AccessUUID, strconv.Itoa(int(userID)), at.Sub(now)).Err()
 	if errAccess != nil {
-		return errAccess.Err()
+		return errAccess
 	}
 
-	errRefresh := db.GetRedis().Set(td.RefreshUUID, strconv.Itoa(int(userID)), rt.Sub(now))
+	errRefresh := db.GetRedis().Set(td.RefreshUUID, strconv.Itoa(int(userID)), rt.Sub(now)).Err()
 	if errRefresh != nil {
-		return errRefresh.Err()
+		return errRefresh
 	}
 	return nil
 }

@@ -43,7 +43,7 @@ func (ctrl AuthController) Refresh(c *gin.Context) {
 		return
 	}
 
-	// verifyt the token
+	// verify the token
 	token, err := jwt.Parse(tokenForm.RefreshToken, func(t *jwt.Token) (interface{}, error) {
 		// Make sure that the token method confirms to "SigningMethodHMAC"
 		if _, ok := t.Method.(*jwt.SigningMethodHMAC); !ok {
@@ -51,11 +51,14 @@ func (ctrl AuthController) Refresh(c *gin.Context) {
 		}
 		return []byte(os.Getenv("REFRESH_SECRET")), nil
 	})
+	fmt.Println("Token: ", token)
 	// if there is an error the token must have expired
 	if err != nil {
 		c.JSON(http.StatusUnauthorized, gin.H{"message": "invalid authorization, please login again"})
 		return
 	}
+
+	fmt.Println("2 error: ", err)
 	// is token valid?
 	if _, ok := token.Claims.(jwt.Claims); !ok && !token.Valid {
 		c.JSON(http.StatusUnauthorized, gin.H{"message": "invalid authorization, please login again"})
@@ -63,6 +66,7 @@ func (ctrl AuthController) Refresh(c *gin.Context) {
 	}
 	// Since token is valid, get the uuid
 	claims, ok := token.Claims.(jwt.MapClaims) // the token claims should conform to MapClaims
+	fmt.Println("Claims: ", claims)
 	if ok && token.Valid {
 		refreshUUID, ok := claims["refresh_uuid"].(string) // convert the interface to string
 		if !ok {
@@ -74,12 +78,16 @@ func (ctrl AuthController) Refresh(c *gin.Context) {
 			c.JSON(http.StatusUnauthorized, gin.H{"message": "invalid authorization, please login again"})
 			return
 		}
+
 		// Delete the previous refresh token
+		fmt.Println("refreshUUID: ", refreshUUID)
 		deleted, delErr := authModel.DeleteAuth(refreshUUID)
+		fmt.Println("delErr: , deleted ", delErr, deleted)
 		if delErr != nil || deleted == 0 {
 			c.JSON(http.StatusUnauthorized, gin.H{"message": "invalid authorization, please login again"})
 			return
 		}
+		fmt.Println("idhara to aaya")
 
 		// create new pairs of refresh and access tokens
 		ts, createErr := authModel.CreateToken(userID)

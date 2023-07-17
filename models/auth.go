@@ -38,7 +38,7 @@ func (m AuthModel) CreateToken(userID int64) (*TokenDetails, error) {
 	td := &TokenDetails{
 		AccessUUID:  uuid.New().String(),
 		RefreshUUID: uuid.New().String(),
-		AtExpires:   time.Now().Add(time.Minute * 15).Unix(),
+		AtExpires:   time.Now().Add(time.Hour * 2).Unix(),
 		RtExpires:   time.Now().Add(time.Hour * 24 * 7).Unix(),
 	}
 

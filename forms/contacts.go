@@ -1,5 +1,11 @@
 package forms
 
+import (
+	"encoding/json"
+
+	"github.com/go-playground/validator/v10"
+)
+
 type ContactsForm struct{}
 
 type CreateContactsForm struct {
@@ -7,6 +13,18 @@ type CreateContactsForm struct {
 	LastName           string `form:"lastName" json:"lastName" binding:"required,min=3,max=100"`
 	Email              string `form:"email" json:"email" binding:"required,email"`
 	CountryCode        string `form:"countryCode" json:"countryCode" binding:"required"`
+	Mobile             string `form:"mobile" json:"mobile"`
+	EventsNotification string `form:"eventsNotification" json:"eventsNotification"`
+	Groups             string `form:"groups" json:"groups"`
+	EventsType         string `form:"eventsType" json:"eventsType"`
+	Status             string `form:"status" json:"status"`
+}
+
+type UpdateContactsForm struct {
+	FirstName          string `form:"firstName" json:"firstName" binding:"min=3,max=100"`
+	LastName           string `form:"lastName" json:"lastName" binding:"min=3,max=100"`
+	Email              string `form:"email" json:"email" binding:"email"`
+	CountryCode        string `form:"countryCode" json:"countryCode"`
 	Mobile             string `form:"mobile" json:"mobile"`
 	EventsNotification string `form:"eventsNotification" json:"eventsNotification"`
 	Groups             string `form:"groups" json:"groups"`
@@ -68,4 +86,64 @@ func (f ContactsForm) Mobile(tag string, errMsg ...string) (message string) {
 	default:
 		return "Something went wrong, please try again later"
 	}
+}
+
+func (f ContactsForm) Create(err error) string {
+	switch err.(type) {
+	case validator.ValidationErrors:
+		if _, ok := err.(*json.UnmarshalTypeError); ok {
+			return "Something went wrong, please try again later"
+		}
+
+		for _, err := range err.(validator.ValidationErrors) {
+			if err.Field() == "FirstName" {
+				return f.Name(err.Tag())
+			}
+			if err.Field() == "LastName" {
+				return f.Name(err.Tag())
+			}
+			if err.Field() == "Email" {
+				return f.Email(err.Tag())
+			}
+			if err.Field() == "CountryCode" {
+				return f.CountryCode(err.Tag())
+			}
+			if err.Field() == "Mobile" {
+				return f.Mobile(err.Tag())
+			}
+		}
+	default:
+		return "invalid request"
+	}
+	return "Something went wrong, please try again later"
+}
+
+func (f ContactsForm) Update(err error) string {
+	switch err.(type) {
+	case validator.ValidationErrors:
+		if _, ok := err.(*json.UnmarshalTypeError); ok {
+			return "Something went wrong, please try again later"
+		}
+
+		for _, err := range err.(validator.ValidationErrors) {
+			if err.Field() == "FirstName" {
+				return f.Name(err.Tag())
+			}
+			if err.Field() == "LastName" {
+				return f.Name(err.Tag())
+			}
+			if err.Field() == "Email" {
+				return f.Email(err.Tag())
+			}
+			if err.Field() == "CountryCode" {
+				return f.CountryCode(err.Tag())
+			}
+			if err.Field() == "Mobile" {
+				return f.Mobile(err.Tag())
+			}
+		}
+	default:
+		return "invalid request"
+	}
+	return "Something went wrong, please try again later"
 }

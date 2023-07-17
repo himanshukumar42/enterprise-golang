@@ -46,6 +46,15 @@ func RequestIDMiddleware() gin.HandlerFunc {
 	}
 }
 
+var auth = new(controllers.AuthController)
+
+func TokenAuthMiddleware() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		auth.TokenValid(c)
+		c.Next()
+	}
+}
+
 func main() {
 	// Load the .env file
 	err := godotenv.Load(".env")
@@ -90,6 +99,13 @@ func main() {
 		v1.POST("/token/refresh", auth.Refresh)
 
 		/** START Contacts ***/
+		contacts := new(controllers.ContactsController)
+		v1.POST("/contacts/", TokenAuthMiddleware(), contacts.Create)
+		v1.GET("/contacts/", TokenAuthMiddleware(), contacts.All)
+		v1.GET("/contacts/:id", TokenAuthMiddleware(), contacts.One)
+		v1.PUT("/contacts/:id", TokenAuthMiddleware(), contacts.Update)
+		v1.PATCH("/contacts/:id", TokenAuthMiddleware(), contacts.PartialUpdate)
+		v1.DELETE("/contacts/:id", TokenAuthMiddleware(), contacts.Delete)
 
 	}
 	r.LoadHTMLGlob("./public/html/*")

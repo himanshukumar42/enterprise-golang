@@ -1,6 +1,7 @@
 package controllers
 
 import (
+	"fmt"
 	"net/http"
 	"strconv"
 
@@ -26,6 +27,7 @@ func (ctrl ContactsController) Create(c *gin.Context) {
 	}
 
 	id, err := contactsModel.Create(userID, form)
+	fmt.Println("Error: ", err)
 	if err != nil {
 		c.AbortWithStatusJSON(http.StatusNotAcceptable, gin.H{"message": "Contacts could not be created"})
 		return
@@ -55,6 +57,7 @@ func (ctrl ContactsController) One(c *gin.Context) {
 		return
 	}
 	result, err := contactsModel.One(userID, getID)
+	fmt.Println("Error: ", err)
 	if err != nil {
 		c.AbortWithStatusJSON(http.StatusNotFound, gin.H{"message": "contact not found"})
 		return
@@ -110,6 +113,7 @@ func (ctrl ContactsController) PartialUpdate(c *gin.Context) {
 	}
 
 	err = contactsModel.PartialUpdate(userID, getID, form)
+	fmt.Println("Error: ", err)
 	if err != nil {
 		c.AbortWithStatusJSON(http.StatusNotAcceptable, gin.H{"message": "Contacts could not be updated"})
 		return

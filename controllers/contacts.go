@@ -1,7 +1,6 @@
 package controllers
 
 import (
-	"fmt"
 	"net/http"
 	"strconv"
 
@@ -38,7 +37,6 @@ func (ctrl ContactsController) All(c *gin.Context) {
 	userID := getUserID(c)
 
 	result, err := contactsModel.All(userID)
-	fmt.Println("Error: ", err)
 	if err != nil {
 		c.AbortWithStatusJSON(http.StatusNotAcceptable, gin.H{"message": "could not get contacts"})
 		return
@@ -57,7 +55,6 @@ func (ctrl ContactsController) One(c *gin.Context) {
 		return
 	}
 	result, err := contactsModel.One(userID, getID)
-	fmt.Println("Error: ", err)
 	if err != nil {
 		c.AbortWithStatusJSON(http.StatusNotFound, gin.H{"message": "contact not found"})
 		return
@@ -85,7 +82,6 @@ func (ctrl ContactsController) Update(c *gin.Context) {
 	}
 
 	err = contactsModel.Update(userID, getID, form)
-	fmt.Println("Error: ", err)
 	if err != nil {
 		c.AbortWithStatusJSON(http.StatusNotAcceptable, gin.H{"message": "Contacts could not be updated"})
 		return
@@ -108,13 +104,12 @@ func (ctrl ContactsController) PartialUpdate(c *gin.Context) {
 	var form forms.UpdateContactsForm
 
 	if validationErr := c.ShouldBindJSON(&form); validationErr != nil {
-		message := contactsForm.Create(validationErr)
+		message := contactsForm.Update(validationErr)
 		c.AbortWithStatusJSON(http.StatusNotAcceptable, gin.H{"message": message})
 		return
 	}
 
 	err = contactsModel.PartialUpdate(userID, getID, form)
-	fmt.Println("Error: ", err)
 	if err != nil {
 		c.AbortWithStatusJSON(http.StatusNotAcceptable, gin.H{"message": "Contacts could not be updated"})
 		return

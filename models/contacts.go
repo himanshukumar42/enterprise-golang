@@ -10,18 +10,18 @@ import (
 )
 
 type Contacts struct {
-	ID                int64           `db:"id, primarykey, autoincrement" json:"id"`
-	UserID            int64           `db:"user_id" json:"-"`
-	FirstName         string          `db:"first_name" json:"firstName"`
-	LastName          string          `db:"last_name" json:"lastName"`
-	Email             string          `db:"email" json:"email"`
-	CountryCode       string          `db:"country_code" json:"countryCode"`
-	Mobile            string          `db:"mobile_number" json:"mobile"`
-	EventNotification string          `db:"events_notification" json:"eventNotification"`
-	Groups            json.RawMessage `db:"groups" json:"groups"`
-	EventsType        json.RawMessage `db:"event_types" json:"eventsType"`
-	Status            string          `db:"status" json:"status"`
-	User              *JSONRaw        `db:"user" json:"user"`
+	ID                 int64           `db:"id, primarykey, autoincrement" json:"id"`
+	UserID             int64           `db:"user_id" json:"-"`
+	FirstName          string          `db:"first_name" json:"firstName"`
+	LastName           string          `db:"last_name" json:"lastName"`
+	Email              string          `db:"email" json:"email"`
+	CountryCode        string          `db:"country_code" json:"countryCode"`
+	Mobile             string          `db:"mobile_number" json:"mobile"`
+	EventsNotification string          `db:"events_notification" json:"eventsNotification"`
+	Groups             json.RawMessage `db:"groups" json:"groups"`
+	EventsType         json.RawMessage `db:"event_types" json:"eventsType"`
+	Status             string          `db:"status" json:"status"`
+	User               *JSONRaw        `db:"user" json:"user"`
 }
 
 type ContactsModel struct{}
@@ -43,8 +43,8 @@ func (c ContactsModel) One(userID, id int64) (contacts Contacts, err error) {
 		c.id, c.user_id, c.first_name, c.last_name, 
 		c.email, c.country_code, c.mobile_number,
 		c.events_notification, 
-		array_to_json(c.groups) AS groups, 
-		array_to_json(c.event_types) AS event_types,
+		COALESCE(array_to_json(c.groups), '[]'::json) AS groups, 
+		COALESCE(array_to_json(c.event_types), '[]'::json) AS event_types,
 		c.status, json_build_object('id', u.id, 'name', u.name, 'email', u.email)
 		AS user from public.contacts c LEFT JOIN public.user u on c.user_id = u.id 
 		WHERE c.user_id=$1 AND c.id=$2 LIMIT 1`, userID, id)
@@ -55,9 +55,9 @@ func (c ContactsModel) All(userID int64) (contacts []DataList, err error) {
 	_, err = db.GetDB().Select(&contacts, `
 	SELECT COALESCE(array_to_json(array_agg(row_to_json(d))), '[]') 
 		AS data, (SELECT row_to_json(n) FROM ( SELECT count(c.id) AS total FROM public.contacts
-	 	AS c WHERE c.user_id=$1 LIMIT 1 ) n ) AS meta FROM ( SELECT c.id, c.first_name, c.last_name, 
-		c.email, c.country_code, c.mobile_number, c.events_notification, c.groups, c.event_types, 
-		c.status, json_build_object('id', u.id, 'name', u.name, 'email', u.email) AS user FROM public.contacts c 
+	 	AS c WHERE c.user_id=$1 LIMIT 1 ) n ) AS meta FROM ( SELECT c.id, c.first_name AS "firstName", c.last_name as "lastName", 
+		c.email, c.country_code as "countryCode", c.mobile_number as "mobile", c.events_notification as "eventsNotification", c.groups as "groups", c.event_types as "eventsType", 
+		c.status as "status", json_build_object('id', u.id, 'name', u.name, 'email', u.email) AS user FROM public.contacts c 
 		LEFT JOIN public.user u on c.user_id = u.id WHERE c.user_id=$1 ORDER BY c.id DESC) d`,
 		userID)
 	return contacts, err

@@ -3,23 +3,25 @@ package main
 import (
 	"fmt"
 	"log"
+	"net/http"
 	"os"
+	"runtime"
 
 	"github.com/gin-contrib/gzip"
 	"github.com/gin-gonic/gin"
 	"github.com/gin-gonic/gin/binding"
 	uuid "github.com/google/uuid"
+	"github.com/himanshukumar42/enterprise/controllers"
 	"github.com/himanshukumar42/enterprise/db"
 	"github.com/himanshukumar42/enterprise/forms"
 	"github.com/joho/godotenv"
-	"storj.io/storj/multinode/console/controllers"
 )
 
 // CORSMiddleware ...
 // CORS (Cross-Origin Resource Sharing)
 func CORSMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		c.Writer.Header().Set("Access-Control-Allow-Origin", "http://localhost")
+		c.Writer.Header().Set("Access-Control-Allow-Origin", "http://localhost:3000")
 		c.Writer.Header().Set("Access-Control-Max-Age", "86400")
 		c.Writer.Header().Set("Access-Control-Allow-Methods", "POST, GET, OPTIONS, PUT, PATCH, DELETE")
 		c.Writer.Header().Set("Access-Control-Allow-Headers", "X-Requested-With, Content-Type, Origin, Authorization, Accept, Client-Security-Token, Accept-Encoding, x-access-token")
@@ -40,6 +42,15 @@ func RequestIDMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		uuid := uuid.New()
 		c.Writer.Header().Set("X-Request-Id", uuid.String())
+		c.Next()
+	}
+}
+
+var auth = new(controllers.AuthController)
+
+func TokenAuthMiddleware() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		auth.TokenValid(c)
 		c.Next()
 	}
 }
@@ -77,5 +88,54 @@ func main() {
 	{
 		/*** START USER **/
 		user := new(controllers.UserController)
+		v1.POST("/users/login", user.Login)
+		v1.POST("/users/register", user.Register)
+		v1.GET("/users/logout", user.Logout)
+
+		/** START AUTH **/
+		auth := new(controllers.AuthController)
+
+		// Refresh the token when needed to generate new access_token and refresh_token for the user
+		v1.POST("/token/refresh", auth.Refresh)
+
+		/** START Contacts ***/
+		contacts := new(controllers.ContactsController)
+		v1.POST("/contacts/", TokenAuthMiddleware(), contacts.Create)
+		v1.GET("/contacts/", TokenAuthMiddleware(), contacts.All)
+		v1.GET("/contacts/:id", TokenAuthMiddleware(), contacts.One)
+		v1.PUT("/contacts/:id", TokenAuthMiddleware(), contacts.Update)
+		v1.PATCH("/contacts/:id", TokenAuthMiddleware(), contacts.PartialUpdate)
+		v1.DELETE("/contacts/:id", TokenAuthMiddleware(), contacts.Delete)
+
+	}
+	r.LoadHTMLGlob("./public/html/*")
+	r.Static("/public", "./public")
+
+	r.GET("/", func(c *gin.Context) {
+		c.HTML(http.StatusOK, "index.html", gin.H{
+			"goVersion": runtime.Version(),
+		})
+	})
+
+	r.NoRoute(func(c *gin.Context) {
+		c.HTML(404, "404.html", gin.H{})
+	})
+
+	port := os.Getenv("PORT")
+	log.Printf("\n\n PORT: %s \n ENV: %s \n SSL: %s \n Version: %s \n\n", port, os.Getenv("ENV"), os.Getenv("SSL"), os.Getenv("API_VERSION"))
+
+	if os.Getenv("SSL") == "TRUE" {
+		// Generated using sh generate-certificate.sh
+		SSLKeys := &struct {
+			CERT string
+			KEY  string
+		}{
+			CERT: "./cert/myCA.cer",
+			KEY:  "./cert/myCA.key",
+		}
+
+		r.RunTLS(":"+port, SSLKeys.CERT, SSLKeys.KEY)
+	} else {
+		r.Run(":" + port)
 	}
 }
